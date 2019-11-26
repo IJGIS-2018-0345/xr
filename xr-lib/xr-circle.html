@@ -1,0 +1,71 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-circle">
+	<template>
+		<style>
+			xr-sphere {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRCircle extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-circle";
+			}
+
+			static get properties() {
+				return {
+					radius: {type: Number, value: 1},
+					segments: {type: Number, value: 8},
+					thetaStart: {type: Number, value: 0},
+					thetaLength: {type: Number, value: 2*Math.PI},
+					color: {type: String, value: new THREE.Color('rgb(161, 161, 161)')}
+				};
+			}
+
+			static get observers() {
+				return;
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let geometry = new THREE.CircleGeometry(this.radius, this.segments, this.thetaStart, this.thetaLength);
+				let material = new THREE.MeshBasicMaterial({
+					side: THREE.DoubleSide,
+					color: this.color,
+					depthTest: false,
+					transparent: true
+				});
+
+				if (this.texture !== undefined) {
+					material.map = new THREE.TextureLoader().load(this.texture);
+				}
+
+				let mesh = new THREE.Mesh(geometry, material);
+
+				this.addWebGLObject3D(mesh);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+
+				this.boundingBox = this.computeBoundingBox();
+			}
+		}
+
+		customElements.define(XRCircle.is, XRCircle);
+
+	</script>
+</dom-module>

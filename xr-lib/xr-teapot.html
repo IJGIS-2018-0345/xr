@@ -1,0 +1,56 @@
+<link rel="import" href="./polymerImport.html">
+<dom-module id="xr-teapot">
+	<template>
+		<style>
+			xr-teapot {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRTeapot extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-teapot";
+			}
+
+			static get properties() {
+				return {
+					size: {type: Number, value: 400},
+					segment: {type: Number, value: 15},
+					color: {type: String, value: new THREE.Color('rgb(204, 166, 61)')}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if (this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let geometry = new THREE.TeapotBufferGeometry(this.size, this.segment, true, true, true, true, true);
+				let material = new THREE.MeshPhongMaterial({
+					color: this.color
+				});
+
+				let mesh = new THREE.Mesh(geometry, material);
+				mesh.rotation.x = Math.PI / 2;
+				this.addWebGLObject3D(mesh);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+
+				this.boundingBox = this.computeBoundingBox();
+			}
+		}
+
+		customElements.define(XRTeapot.is, XRTeapot);
+	</script>
+</dom-module>

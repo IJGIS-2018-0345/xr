@@ -1,0 +1,38 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-slider">
+	<template>
+		<style>
+			paper-slider.blue {
+				position: absolute;
+				top: 60px;
+				left: 20vw;
+				width: 60vw;
+				--paper-slider-knob-color: #2196F3;
+				--paper-slider-active-color: #2196F3;
+			}
+		</style>
+		<paper-slider class="blue" value="0"></paper-slider>
+	</template>
+
+	<script>
+
+		class XRSliderUI extends XRUI {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-slider";
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+			}
+
+		}
+
+		customElements.define(XRSliderUI.is, XRSliderUI);
+
+	</script>
+</dom-module>

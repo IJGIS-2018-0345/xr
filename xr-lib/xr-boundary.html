@@ -1,0 +1,52 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-boundary">
+	<template>
+		<style>
+			xr-boundary {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRBoundary extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-boundary";
+			}
+
+			static get properties() {
+				return {};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					let squareGeo = new THREE.Geometry();
+					squareGeo.vertices.push(new THREE.Vector3(-0.1, 0.1, 0.0));
+					squareGeo.vertices.push(new THREE.Vector3(0.1, 0.1, 0.0));
+					squareGeo.vertices.push(new THREE.Vector3(0.1, -0.1, 0.0));
+					squareGeo.vertices.push(new THREE.Vector3(-0.1, -0.1, 0.0));
+					squareGeo.vertices.push(new THREE.Vector3(-0.1, 0.1, 0.0));
+
+					let squareMat = new THREE.MeshBasicMaterial({color: 0xffff00});
+
+					let square = new THREE.Line(squareGeo, squareMat);
+
+					this.addWebGLObject3D(square);
+					this.addCSS3DObject3D(this.CSS3DObject3D);
+				}
+			}
+		}
+
+		customElements.define(XRBoundary.is, XRBoundary);
+
+	</script>
+</dom-module>

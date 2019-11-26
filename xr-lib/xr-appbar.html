@@ -1,0 +1,443 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-appbar">
+	<template>
+		<style>
+			#XRAppbar {
+				margin: 0px;
+				padding: 0px;
+				height: 50px;
+				color: #FFFFFF;
+				background-color: #2196F3;
+				z-index: 1000;
+			}
+
+			#XRAppbarLeftIcon, #XRAppbarRightIcon {
+				position: absolute;
+				width: 10vw !important;
+				height: 50px !important;
+				padding: 0px;
+				color: #FFFFFF;
+				z-index: 1001;
+			}
+
+			#XRAppbarLeftIcon {
+				top: 0;
+				left: 0;
+			}
+
+			#XRAppbarRightIcon {
+				top: 0;
+				right: 0;
+				--layout-inline_-_display: inline;
+			}
+
+			#XRAppbarRightIcon > paper-icon-button {
+				width: 100%;
+				height: 50px;
+				padding: 0px;
+			}
+
+			#XRAppbarCenterText {
+				position: absolute;
+				top: 5px;
+				left: 10vw;
+				width: 80vw;
+				height: 40px;
+				border: 0px;
+				border-radius: 5px;
+				background-color: #FFFFFF;
+				--paper-font-caption_-_line-height: 0px;
+				--light-theme-secondary-color: #fff;
+				--secondary-text-color: none;
+				--primary-color: none;
+				pointer-events: all;
+				z-index: 1001;
+			}
+
+			paper-input#XRAppbarCenterText {
+				text-align: center;
+			}
+
+			paper-input#XRAppbarCenterText[focused] {
+				text-align: left;
+			}
+
+			#XRModeModalList {
+				padding: 0px;
+				margin: 0px;
+			}
+
+			.ModeList {
+				border-bottom: 1px solid #EAEAEA;
+			}
+
+			.ModeList > input {
+				margin-right: 10px;
+			}
+
+			#XRAboutModal > img {
+				width: 100px;
+				height: 100px;
+				padding: 0px;
+				border-radius: 50%;
+				margin-left: 50px;
+				margin-bottom: 10px;
+				border: 8px solid #2196F3;
+			}
+
+			.XRAboutCon {
+				width: 150px;
+				margin: 8px 25px;
+				padding: 0 10px;
+				text-align: center;
+				font-weight: bold;
+				border-bottom: 1px solid #8C8C8C;
+			}
+
+			#XRMenuModal {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 50vmin;
+				height: 100vh;
+				margin: 0px;
+				background-color: #FCFCFC;
+				z-index: 1001;
+			}
+
+			#XRMenuList {
+				padding: 0px;
+				margin: 0px;
+				background-color: #FCFCFC;
+			}
+
+			.XRMenu {
+				height: 60px;
+				border-bottom: 1px solid #8C8C8C;
+			}
+
+			.XRMenu > iron-icon {
+				width: 15%;
+				margin-right: 15px;
+				color: #2196F3;
+			}
+
+			.XRMenu > paper-dropdown-menu {
+				width: 85%;
+			}
+
+			#XRMenuModalClose {
+				width: 10%;
+				min-height: 35px;
+				padding-left: 85%;
+				padding-right: 5%;
+				background-color: #EAEAEA;
+			}
+
+			#XREVModal > paper-item {
+				width: 20px;
+				height: 50px;
+				padding: 0px 15px;
+				margin: 20px 20px;
+				border-radius: 50%;
+				font-size: 30px;
+				font-weight: bold;
+				text-align: center;
+				color: #FFFFFF;
+				float: left;
+			}
+
+			#urlBtn {
+				position: absolute;
+				right: 10vw;
+				top: 0px;
+				width: 10vw;
+				height: 50px;
+				padding: 5px;
+				color: #8C8C8C;
+				z-index: 1001;
+			}
+
+			#XRAppbarDrop > paper-item {
+				color: #000000;
+			}
+
+			#modeBox {
+				position: absolute;
+				bottom: 5px;
+				left: 5px;
+			}
+
+			#modeDiv{
+				width: 60px;
+				height: 47px;
+				padding-top: 13px;
+				font-weight: 500;
+				color: #FFF;
+				background-color: #2196F3;
+				border-radius: 15px;
+				line-height: 36px;
+				font-size: 20px;
+				text-align:center;
+			}
+
+			#EVmodeBox {
+				position: absolute;
+				bottom: 5px;
+				right: 5px;
+				display: none;
+			}
+
+			#EVmodeBox > div {
+				margin-left: 5px;
+				float: left;
+			}
+
+			#EVmodeBox > div > div{
+				width: 80px;
+				height: 25px;
+				margin: 5px 0px;
+				text-align: center;
+				padding-top: 7px;
+				color: #FFF;
+				background-color: #FFCD12;
+				border-radius: 10px;
+			}
+
+			#VBtn {
+				background-color: #FFCD12;
+			}
+
+			#EBtn {
+				background-color: #8C8C8C;
+			}
+
+
+		</style>
+
+		<!-- app bar -->
+		<app-toolbar id="XRAppbar"></app-toolbar>
+		<paper-icon-button icon="menu" id="XRAppbarLeftIcon" on-click="openMenuDialog"></paper-icon-button>
+		<paper-input label="searchterm or code" id="XRAppbarCenterText" no-label-float></paper-input>
+		<paper-menu-button id="XRAppbarRightIcon" horizontal-align="right"
+		                   vertical-align="top"
+		                   vertical-offset="50">
+			<paper-icon-button slot="dropdown-trigger" icon="more-vert"></paper-icon-button>
+			<div slot="dropdown-content" id="XRAppbarDrop">
+				<paper-item on-click="showSetting">Setting</paper-item>
+				<paper-item on-click="openModeDialog" id="XRMode">XR Mode</paper-item>
+				<paper-item on-click="openAboutDialog" id="XRAbout">About</paper-item>
+				<paper-item on-click="openEVDialog" id="EVMode">Edit</paper-item>
+			</div>
+		</paper-menu-button>
+
+		<paper-dialog id="XRMenuModal">
+			<paper-listbox id="XRMenuList">
+				<paper-item id="XRMenuModalClose">
+					<iron-icon icon="close" on-click="closeMenuDialog"></iron-icon>
+				</paper-item>
+				<paper-item class="XRMenu">
+					<iron-icon icon="camera-enhance"></iron-icon>Scan
+				</paper-item>
+				<paper-item class="XRMenu">
+					<iron-icon icon="grade"></iron-icon>Favorites
+				</paper-item>
+				<paper-item class="XRMenu">
+					<iron-icon icon="language"></iron-icon>GeoLayers
+				</paper-item>
+				<paper-item class="XRMenu">
+					<iron-icon icon="perm-media"></iron-icon>Recent content
+				</paper-item>
+				<paper-item class="XRMenu">
+					<iron-icon icon="perm-media"></iron-icon>
+					<paper-dropdown-menu label="XR Examples">
+						<paper-listbox slot="dropdown-content">
+							<paper-item on-click="onChangeHtml" href="//jungminha.webizing.org/00/">Shaft Change</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/ImageTarget(Apeach)">ImageTarget(Apeach)</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/ImageTarget(line01)">ImageTarget(line01)</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/MultiTarget(Apeach)">MultiTarget(Apeach)</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/MultiTarget(Muzi)">MultiTarget(Muzi)</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/CylinderTarget">CylinderTarget</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/BeaconSpace">BeaconSpace</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/Beacon(submarine)">Beacon(submarine)</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/CSS3DObject">CSS3DObject</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/IndustrialPumpRoom">IndustrialPumpRoom</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/meshClick">meshClick</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/livinglab">livingLab</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/solar_system">solar_system</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/QRCode">QRCode</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/TransformControls">TransformControls</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/scale">scale</paper-item>
+							<paper-item on-click="onChangeHtml" href="//example.xr.webizing.org/0.6/editor">editor</paper-item>
+						</paper-listbox>
+					</paper-dropdown-menu>
+				</paper-item>
+			</paper-listbox>
+		</paper-dialog>
+
+        <paper-dialog id="XRModeModal">
+            <paper-dropdown-menu label="XR Mode">
+                <paper-listbox  id="XRModeModalList" slot="dropdown-content" class="dropdown-content">
+                    <paper-item id="Mode3D" class="ModeList" value="3D" on-tap="setMode3D">3D</paper-item>
+                    <paper-item id="ModeVR" class="ModeList" value="VR" on-tap="setModeVR">VR</paper-item>
+                    <paper-item id="ModeAR" class="ModeList" value="AR" on-tap="setModeAR">AR</paper-item>
+                </paper-listbox>
+            </paper-dropdown-menu>
+        </paper-dialog>
+
+		<paper-dialog id="XRAboutModal">
+			<img src="https://xrweb.webizing.org/images/tripadvisor.png">
+			<div class="XRAboutCon">
+				Version 1.0.0
+			</div>
+			<div class="XRAboutCon">
+				About
+			</div>
+		</paper-dialog>
+
+		<paper-dialog id="XREVModal">
+			<paper-item id="EBtn" on-click="setEMode"><iron-icon icon="create"></iron-icon></paper-item>
+			<paper-item id="VBtn" on-click="setVMode"><iron-icon icon="visibility"></iron-icon></paper-item>
+		</paper-dialog>
+
+		<paper-icon-button icon="arrow-forward" id="urlBtn" on-click="moveToUrl"></paper-icon-button>
+
+
+		<div id="modeBox">
+			<div id="modeDiv">
+			</div>
+		</div>
+
+		<div id="EVmodeBox">
+			<div>
+				<div style="background: transparent"></div>
+				<div>Rotate</div>
+			</div>
+			<div>
+				<div>Scale</div>
+				<div>Translate</div>
+			</div>
+		</div>
+	</template>
+
+	<script>
+
+		class XRAppbarUI extends XRUI {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-appbar";
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				this.$.modeDiv.innerHTML = 'Mode';
+			}
+
+			openMenuDialog() {
+				this.$.XRMenuModal.open();
+			}
+
+			closeMenuDialog() {
+				this.$.XRMenuModal.close();
+			}
+
+			openModeDialog() {
+				this.$.XRAppbarRightIcon.close();
+				this.$.XRModeModal.open();
+				this.checkARMode();
+			}
+
+			openAboutDialog() {
+				this.$.XRAppbarRightIcon.close();
+				this.$.XRAboutModal.open();
+			}
+
+			openEVDialog() {
+				this.$.XRAppbarRightIcon.close();
+				this.$.XREVModal.open();
+			}
+
+			moveToUrl() {
+				let url = this.$.XRAppbarCenterText.value;
+
+				if(url !== undefined) {
+					if(url.indexOf("//") === -1) {
+						url = XRAppbarUI.PROTOCOL_PATH + url;
+					}
+					window.location.href = url;
+				}
+			}
+
+			checkARMode() {
+				let type = XR.ContextManager.getXRDeviceType();
+
+				if (type === XRDevice.DESKTOP) {
+					let elementAR = this.$.ModeAR;
+					elementAR.parentNode.removeChild(elementAR);
+				}
+			}
+
+			setMode3D() {
+				this.$.XRModeModal.close();
+				this.$.modeDiv.innerHTML = "3D";
+				XR.ContextManager.setXRMode(XRDevice.MODE3D);
+			}
+
+			setModeVR() {
+				this.$.XRModeModal.close();
+				this.$.modeDiv.innerHTML = "VR";
+				XR.ContextManager.setXRMode(XRDevice.VR);
+			}
+
+			setModeAR() {
+				this.$.XRModeModal.close();
+				this.$.modeDiv.innerHTML = "AR";
+				XR.ContextManager.setXRMode(XRDevice.AR);
+			}
+
+			setEMode() {
+				this.$.XREVModal.close();
+				this.$.EVmodeBox.style.display = 'block';
+				this.$.EBtn.style.backgroundColor = '#FFCD12';
+				this.$.VBtn.style.backgroundColor = '#8C8C8C';
+			}
+
+			setVMode() {
+				this.$.XREVModal.close();
+				this.$.EVmodeBox.style.display = 'none';
+				this.$.VBtn.style.backgroundColor = '#FFCD12';
+				this.$.EBtn.style.backgroundColor = '#8C8C8C';
+			}
+
+			showSetting() {
+				XRSetting.callSettingActivity();
+			}
+
+			onChangeHtml(e) {
+				let type = XR.ContextManager.getXRDeviceType();
+
+				if(type === XRDevice.MOBILE) {
+					switch(platform.os.family) {
+						case XR.Platform.Android:
+							XR.SpaceManager.changeHtml(e.currentTarget.getAttribute('href'));
+							break;
+						case XR.Platform.iOS:
+							window.location.href = e.currentTarget.getAttribute('href');
+							break;
+					}
+				} else if(type === XRDevice.DESKTOP) {
+					window.location.href = e.currentTarget.getAttribute('href');
+				}
+			}
+		}
+
+		customElements.define(XRAppbarUI.is, XRAppbarUI);
+
+		XRAppbarUI.PROTOCOL_PATH = "//";
+	</script>
+</dom-module>

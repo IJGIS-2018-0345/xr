@@ -1,0 +1,69 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-light-spot">
+	<script>
+		'use strict';
+
+		class XRLightSpot extends XRLight {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-light-spot";
+			}
+
+			static get properties() {
+				return {
+                    lookAt: {
+                        type: String,
+                        value: "0 0 0"
+                    },
+					distance: {
+					    type: Number,
+						value: 0
+					},
+					angle: {
+					    type: Number,
+						value: Math.PI/2
+					},
+					penumbra: {
+					    type: Number,
+						value: 0
+					},
+					decay: {
+					    type: Number,
+						value: 1
+					}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+			    let group = new THREE.Group();
+                let targetObject = new THREE.Object3D();
+                let targetPosition = this.lookAt.split(" ");
+                targetObject.position.set(targetPosition[0], targetPosition[1], targetPosition[2]);
+
+                group.add(targetObject);
+
+                let light = new THREE.SpotLight(this.color, this.intensity, this.distance, this.angle, this.penumbra, this.decay);
+
+                group.add(light);
+
+                this.addWebGLObject3D(group);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+			}
+		}
+
+		customElements.define(XRLightSpot.is, XRLightSpot);
+
+	</script>
+</dom-module>

@@ -1,0 +1,30 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-ar">
+	<script>
+		'use strict';
+
+		class XRAR extends Polymer.Element {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-ar";
+			}
+
+			static get properties() {
+				return {
+					engine: {type: String, value: "vuforia" }
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+			}
+		}
+
+		customElements.define(XRAR.is, XRAR);
+
+	</script>
+</dom-module>

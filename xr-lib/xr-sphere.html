@@ -1,0 +1,70 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-sphere">
+	<template>
+		<style>
+			xr-sphere {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRSphere extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-sphere";
+			}
+
+			static get properties() {
+				return {
+					radius: {type: Number, value: 50},
+					widthSegments: {type: Number, value: 8},
+					heightSegments: {type: Number, value: 6},
+					phiStart: {type: Number, value: 0},
+					phiLength: {type: Number, value: Math.PI * 2},
+					thetaStart: {type: Number, value: 0},
+					thetaLength: {type: Number, value: Math.PI}
+				};
+			}
+
+			static get observers() {
+				return;
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let geometry = new THREE.SphereGeometry(this.radius, this.widthSegments, this.heightSegments, this.phiStart, this.phiLength, this.thetaStart, this.thetaLength);
+				let material = new THREE.MeshLambertMaterial({
+					color: this.color
+				});
+
+				if (this.texture !== undefined) {
+					material.map = new THREE.TextureLoader().load(this.texture);
+				}
+
+				let mesh = new THREE.Mesh(geometry, material);
+
+				this.addWebGLObject3D(mesh);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+
+				this.boundingBox = this.computeBoundingBox();
+			}
+		}
+
+		customElements.define(XRSphere.is, XRSphere);
+
+	</script>
+</dom-module>

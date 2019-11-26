@@ -1,0 +1,229 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-world">
+	<script>
+		'use strict';
+
+		class XRWorld extends XRElement {
+
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-world";
+			}
+
+			static get properties() {
+				return {
+
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				this.doInitialize = false;
+				this.renderer = new THREE.XRRenderer();
+
+				this.webGLObject3D = this.renderer.getWebGLScene();
+				this.CSS3DObject3D = this.renderer.getCSS3DScene();
+
+				document.addEventListener(XREvent.GEOMETRY_ON_CLICK, this.handleClick.bind(this), false);
+				document.addEventListener(XREvent.ON_TOUCH_START, this.handleClick.bind(this), false);
+			}
+
+			handleClick(event) {
+				let glRenderer = this.renderer.getWebGLRenderer();
+				let glCamera = this.renderer.getWebGLCamera();
+
+				if(glCamera === null) {
+					return;
+				}
+
+				let mouse = new THREE.Vector2();
+				let raycaster = new THREE.Raycaster();
+				let params = event;
+
+				if (event.type === XREvent.GEOMETRY_ON_CLICK){
+					mouse.x = (event.clientX / glRenderer.domElement.clientWidth) * 2 - 1;
+					mouse.y = -( event.clientY / glRenderer.domElement.clientHeight ) * 2 + 1;
+				} else if (event.type === XREvent.ON_TOUCH_START) {
+					mouse.x = (event.touches[0].clientX / glRenderer.domElement.clientWidth) * 2 - 1;
+					mouse.y = -( event.touches[0].clientY / glRenderer.domElement.clientHeight ) * 2 + 1;
+				}
+
+				raycaster.setFromCamera(mouse, glCamera);
+
+				params.vectorX= raycaster.ray.direction.x;
+				params.vectorY= raycaster.ray.direction.y;
+				params.vectorZ= raycaster.ray.direction.z;
+
+				let intersects = raycaster.intersectObjects(this.renderer.getTargetWebGLObjects());
+
+				if (intersects.length > 0) {
+					let object = intersects[0].object;
+
+					let name = object.name;
+					let dom = $('[webgl_uuid=' + object.uuid + ']')[0];
+
+					while(dom===undefined) {
+						object = object.parent;
+						dom = $('[webgl_uuid=' + object.uuid + ']')[0];
+
+					}
+
+					if($('[me]').length > 0 ) {
+						if($('[me]')[0].authority === XRUser.AUTHORITY_EDITOR || $('[me]')[0].authority === XRUser.AUTHORITY_OWNER) {
+							this.transformControls.attach(object);
+						} else if($('[me]')[0].authority === XRUser.AUTHORITY_VIEWER) {
+							XR.log(XRWorld.is, "you not have authority");
+						}
+					}
+
+					if(dom === undefined) {
+						XR.log(XRWorld.is, "Can not found DOM that have mesh's webgl_uuid.");
+						return;
+					}
+
+					XREvent.dispatchEvent({type: XREvent.ON_MOUSE_DOWN, target: dom, part: name, params: params});
+				} else {
+					let transformArrows = raycaster.intersectObjects(this.transformControls.children);
+
+					if(transformArrows.length > 0) {
+
+						return;
+					} else {
+						this.transformControls.detach();
+					}
+				}
+			}
+
+			onCameraReady(camera) {
+				this.renderer.setCamera(camera);
+
+				if(camera.lookControls) {
+					this.loadLookControls();
+				}
+				if(camera.wasdControls) {
+					this.loadKeyBoardControls();
+				}
+
+				if(!camera.lookControls && !camera.wasdControls) {
+					this.loadDefaultCameraControls();
+				}
+
+				if (this.light === undefined) {
+					this.loadDefaultLight();
+				}
+
+				this.loadDefaultTransformControls();
+
+				if (!this.doInitialize) {
+					this.renderer.render();
+					this.animate();
+					this.doInitialize = true;
+				}
+			}
+
+			loadDefaultLight() {
+				this.light = new THREE.AmbientLight(0xf0f0f0, 0.4);
+				this.webGLObject3D.add(this.light);
+			}
+
+			loadDefaultTransformControls() {
+				if (this.transformControls !== undefined) {
+					this.renderer.getWebGLScene().remove(this.transformControls);
+				}
+
+				this.transformControls = new THREE.TransformControls(this.renderer.getWebGLCamera(), this.renderer.getCSS3DRenderer().domElement);
+				this.renderer.getWebGLScene().add(this.transformControls);
+				this.transformControls.addEventListener('change', e => {
+
+					if (e.target.object !== undefined) {
+						let property =
+							`tranlate3d( ${e.target.object.position.x}, ${e.target.object.position.y}, ${e.target.object.position.z}),
+		 				rotate3d(${e.target.object.rotation.x}, ${e.target.object.rotation.y}, ${e.target.object.rotation.z}),
+		 				scale3d(${e.target.object.scale.x}, ${e.target.object.scale.y}, ${e.target.object.scale.z})`;
+
+						let domElement = $(`[webgl_uuid=${e.target.object.uuid}]`)[0];
+
+						if (domElement !== undefined) {
+							domElement.style.setProperty('--xr-transform', property);
+						}
+					}
+				});
+			}
+
+			loadKeyBoardControls() {
+				this.wasdControls = new THREE.KeyboardControls(this.renderer.getWebGLCamera());
+			}
+
+			loadLookControls() {
+				this.lookControls = new THREE.LookControls(this.renderer.getWebGLCamera());
+			}
+
+			loadDefaultCameraControls() {
+				this.defaultCameraControls = new THREE.TrackballControls(this.renderer.getWebGLCamera(), this.renderer.getCSS3DRenderer().domElement);
+			}
+
+			animate() {
+				this.transformControls.update();
+
+				if(this.wasdControls !== undefined) {
+					this.wasdControls.update();
+				}
+
+				if(this.defaultCameraControls !== undefined) {
+					this.defaultCameraControls.update();
+				}
+
+				requestAnimationFrame(this.animate.bind(this));
+			}
+
+			loadSpace(sceneDomElement) {
+				this.traverseOnTargetAvailable(sceneDomElement);
+			}
+
+			unloadSpace(sceneDomElement) {
+				this.traverseDisconnectedCallback(sceneDomElement);
+			}
+
+			traverseOnTargetAvailable(domElement) {
+				if(domElement.tagName.startsWith(WR.PREFIX_XR)) {
+					if(domElement.onTargetAvailable !== undefined) {
+						domElement.onTargetAvailable({});
+					}
+				}
+
+				if (domElement.children.length > 0) {
+					if(domElement.tagName.toLowerCase() === XRTarget.is) {
+						if(domElement.disabled) {
+							return;
+						}
+					}
+					for (let childDom of domElement.children) {
+						this.traverseOnTargetAvailable(childDom);
+					}
+				}
+			}
+
+			traverseDisconnectedCallback(domElement) {
+				if(domElement.tagName.startsWith(XR.PREFIX_XR)) {
+					if(domElement.removeObject !== undefined) {
+						domElement.removeObject();
+					}
+				}
+
+				if (domElement.children.length > 0) {
+					for (let childDom of domElement.children) {
+						this.traverseDisconnectedCallback(childDom);
+					}
+				}
+			}
+		}
+
+		customElements.define(XRWorld.is, XRWorld);
+
+	</script>
+</dom-module>

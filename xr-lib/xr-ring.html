@@ -1,0 +1,68 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-ring">
+	<template>
+		<style>
+			xr-ring {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRRing extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-ring";
+			}
+
+			static get properties() {
+				return {
+					innerRadius: {type: Number, value: 20},
+					outerRadius: {type: Number, value: 50},
+					thetaSegments: {type: Number, value: 8},
+					phiSegments: {type: Number, value: 8},
+					thetaStart: {type: Number, value: 0},
+					thetaLength: {type: Number, value: 2 * Math.PI},
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let geometry = new THREE.RingGeometry(this.innerRadius, this.outerRadius, this.thetaSegments, this.phiSegments, this.thetaStart, this.thetaLength);
+				let material = new THREE.MeshBasicMaterial({
+					color: this.color,
+					side: THREE.DoubleSide
+				});
+
+				if (this.texture !== undefined) {
+					material.map = new THREE.TextureLoader().load(this.texture);
+				}
+
+				//geometry.vertices.shift();
+				let mesh = new THREE.Mesh(geometry, material);
+				mesh.rotation.x = Math.PI / 2;
+
+				this.addWebGLObject3D(mesh);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+
+				this.boundingBox = this.computeBoundingBox();
+			}
+		}
+
+		customElements.define(XRRing.is, XRRing);
+
+	</script>
+</dom-module>

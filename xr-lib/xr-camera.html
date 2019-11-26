@@ -1,0 +1,105 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-camera">
+	<template>
+		<style>
+			xr-camera {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRCamera extends XRElement {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-camera";
+			}
+
+			static get properties() {
+				return {
+					fov: {type: Number, value: 60},
+					aspect: {type: Number, value: 1},
+					near: {type: Number, value: 0.1},
+					far: {type: Number, value: 2000},
+					lookControls: {type: Boolean, value: false},
+					wasdControls: {type: Boolean, value:false},
+					eyeHeight: { type: Number, value: 1 }
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				this.addEventListener(XREvent.CAMERA_CHANGED, this.onCameraChanged);
+				this.addEventListener(XREvent.PROJECTION_MATRIX, this.onProjectionMatrix);
+				this.addEventListener(XREvent.CAMERA_READY, this.onCameraReady);
+			}
+
+			onCameraChanged(event) {
+				XR.log(XRCamera.is, "camera changed");
+
+				this.webGLObject3D.matrixAutoUpdate = false;
+				this.webGLObject3D.matrix.identity();
+				this.webGLObject3D.projectionMatrix.fromArray(event.detail.matrix);
+				this.webGLObject3D.updateProjectionMatrix();
+			}
+
+			onProjectionMatrix(event) {
+				this.webGLObject3D.matrixAutoUpdate = false;
+				this.webGLObject3D.matrix.identity();
+				this.webGLObject3D.projectionMatrix.fromArray(event.detail.matrix);
+				this.webGLObject3D.updateProjectionMatrix();
+			}
+
+			onCameraReady(event) {
+				XR.log(XRCamera.is, "camera ready");
+
+				this.camera = new THREE.PerspectiveCamera(this.fov, window.innerWidth/window.innerHeight, this.near, this.far);
+
+				if(event.detail.matrix !== undefined) {
+					this.camera.matrix = new THREE.Matrix4().identity();
+					this.camera.matrixAutoUpdate = false;
+					this.camera.projectionMatrix.fromArray(event.detail.matrix);
+				}
+
+				this.parentElement.webGLObject3D.children.forEach(child=> {
+					if(child.constructor === THREE.PerspectiveCamera) {
+						this.parentElement.webGLObject3D.remove(child);
+					}
+				});
+
+				this.camera.wasdControls = this.wasdControls;
+				this.camera.lookControls = this.lookControls;
+
+				this.addWebGLObject3D(this.camera);
+				this.parentElement.onCameraReady(this.camera);
+
+				this.updateProperties({
+					fov: this.camera.fov,
+					aspect: this.camera.aspect,
+					near: this.camera.near,
+					far: this.camera.far
+				});
+
+				this.webGLObject3D.updateProjectionMatrix();
+			}
+
+			updateProperties(cameraParams) {
+				let properties = Object.getOwnPropertyNames(cameraParams);
+				
+				for (let property of properties) {
+					this.setAttribute(property, cameraParams[property]);
+				}
+			}
+		}
+
+		customElements.define(XRCamera.is, XRCamera);
+
+	</script>
+</dom-module>

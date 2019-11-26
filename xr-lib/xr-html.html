@@ -1,0 +1,50 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-html">
+	<script>
+		'use strict';
+
+		class XRHTML extends XRElement {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-html";
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let domElement = document.createElement('div');
+
+				domElement.innerHTML = this.innerHTML;
+
+				let css3dObject = new THREE.CSS3DObject(domElement);
+
+				this.addCSS3DObject3D(css3dObject);
+				this.addWebGLObject3D(this.webGLObject3D);
+			}
+
+			getTargetElement(domElement, callback) {
+
+				if(domElement.tagName.toLowerCase() === XRTarget.is) {
+					callback(domElement);
+				} else {
+					if(domElement.parentElement !== null) {
+						this.getTargetElement(domElement.parentElement, callback);
+					}
+				}
+			}
+		}
+
+		customElements.define(XRHTML.is, XRHTML);
+
+	</script>
+</dom-module>

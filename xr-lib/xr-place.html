@@ -1,0 +1,80 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-place">
+	<template>
+		<style>
+			xr-place {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRPlace extends XRElement {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-place";
+			}
+
+			static get properties() {
+				return {
+					src: {type: String},
+					disabled: {type: Boolean, value:false }
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				let webGLAugmentation = new THREE.Group();
+				let css3DAugmentation = new THREE.Group();
+
+				this.addWebGLObject3D(webGLAugmentation);
+				this.addCSS3DObject3D(css3DAugmentation);
+
+				let observer = new MutationObserver(function (mutations) {
+					mutations.forEach(mutationRecord => {
+						if(this.disabled) {
+							this.onCheckout();
+						} else {
+							this.onCheckIn();
+						}
+					});
+				}.bind(this));
+
+				observer.observe(this, {attributes: true, attributeFilter: ['disabled']});
+
+				this.addEventListener(XREvent.AR_PLACE_CHECKOUT, this.onCheckout);
+				this.addEventListener(XREvent.AR_PLACE_CHECKIN, this.onCheckIn);
+			}
+
+			onCheckIn(event) {
+				if(this.disabled) {
+					this.removeAttribute("disabled");
+				}
+
+				this.parentElement.loadSpace(this);
+
+				XR.log(XRSpace.is, "enter " + this.src);
+			}
+
+			onCheckout(event) {
+				if(!this.disabled) {
+					this.setAttribute("disabled", "");
+				}
+
+				this.parentElement.unloadSpace(this);
+
+				XR.log(XRSpace.is, "exit " + this.src);
+			}
+		}
+
+		customElements.define(XRSpace.is, XRSpace);
+
+	</script>
+</dom-module>

@@ -1,0 +1,120 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-animation">
+	<script>
+		class XRAnimation extends Polymer.Element {
+			static get is() {
+				return "xr-animation";
+			}
+
+			static get properties() {
+				return {
+					attribute: {type: String, value: "position"},
+					to: {type: String, value: "0 0 0"},
+					duration: {type: Number, value: 1000}, //millisecond
+					repeat: {type: Number, value: Infinity},
+					easing: {type: String, value: "linear"}, // TWEEN.Easing.Linear, Quadratic, Cubic, Quartic, Quintic, Sinusoidal, Exponential, Circular, Elastic, Back, Bounce
+					radian: {type: Number},
+					radius: {type: Number},
+					step: {type: Number},
+					type: {type: String} // revolution, rotation, movement
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if (this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			disconnectedCallback() {
+				super.disconnectedCallback();
+
+				this.removeAnimation();
+			}
+
+			onTargetAvailable(event) {
+				let clock = new THREE.Clock();
+
+				this.step = clock.getElapsedTime() * 0.01;
+
+				if (typeof this.to === 'string') {
+					this.to = this.to.split(" ");
+				}
+
+				switch (this.easing) {
+					case XRAnimation.VALUE_EASING_LINEAR:
+						this.easing = TWEEN.Easing.Linear.None;
+						break;
+					case XRAnimation.VAlLUE_EASING_QUADRATIC_OUT:
+						this.easing = TWEEN.Easing.Quadratic.Out;
+						break;
+				}
+
+				if (this.parentElement.webGLObject3D !== XRAnimation.MODEL_UNLOADED) {
+					this.onModelLoaded();
+				}
+			}
+
+			onModelLoaded() {
+				switch (this.type) {
+					case XRAnimation.TYPE_MOVEMENT:
+					case XRAnimation.TYPE_REVOLUTION:
+						this.fromWebGL = this.parentElement.webGLObject3D.position;
+						break;
+					case XRAnimation.TYPE_ROTATION:
+						this.fromWebGL = this.parentElement.webGLObject3D.rotation;
+						break;
+				}
+				this.startAnimation();
+			}
+
+			startAnimation() {
+				let coords = { x: this.fromWebGL.x, y: this.fromWebGL.y, z: this.fromWebGL.z};
+				let target = {x: this.to[0]*1, y: this.to[1]*1, z: this.to[2]*1};
+				this.tween = new TWEEN.Tween(coords)
+					.to({x: target.x, y: target.y, z: target.z}, this.duration)
+					.easing(this.easing)
+					.repeat(this.repeat);
+
+				if (this.radian !== undefined && this.radius !== undefined && this.type === XRAnimation.TYPE_REVOLUTION) {
+					this.tween.onUpdate(() => {
+						this.step += this.radian;
+						this.parentElement.webGLObject3D.position.set(Math.sin(this.step) * this.radius, this.parentElement.webGLObject3D.position.y, Math.cos(this.step) * this.radius);
+						this.parentElement.CSS3DObject3D.position.set(Math.sin(this.step) * this.radius * XRAnimation.CSSFactor, this.parentElement.CSS3DObject3D.position.y, Math.cos(this.step) * this.radius * XRAnimation.CSSFactor);
+					});
+				} else if( this.type === XRAnimation.TYPE_ROTATION ){
+					this.tween.onUpdate(() => {
+						this.parentElement.webGLObject3D.rotation.set(coords.x, coords.y, coords.z);
+						this.parentElement.CSS3DObject3D.rotation.set(coords.x, coords.y, coords.z);
+					});
+				} else if (this.type === XRAnimation.TYPE_MOVEMENT) {
+					this.tween.onUpdate(() => {
+						this.parentElement.webGLObject3D.position.set(coords.x, coords.y, coords.z);
+						this.parentElement.CSS3DObject3D.position.set(coords.x, coords.y, coords.z).multiplyScalar(XRAnimation.CSSFactor);
+					});
+				}
+
+				this.tween.start();
+			}
+
+			removeAnimation() {
+				this.tween.stop();
+			}
+		}
+
+		customElements.define(XRAnimation.is, XRAnimation);
+
+		XRAnimation.VALUE_POSITION = "position";
+		XRAnimation.VALUE_ROTATION = "rotation";
+		XRAnimation.VALUE_EASING_LINEAR = "linear";
+		XRAnimation.VAlLUE_EASING_QUADRATIC_OUT = "quadraticOut";
+		XRAnimation.MODEL_UNLOADED = "unloaded";
+		XRAnimation.TYPE_REVOLUTION = "revolution";
+		XRAnimation.TYPE_ROTATION = "rotation";
+		XRAnimation.TYPE_MOVEMENT = "movement";
+		XRAnimation.CSSFactor = 1000;
+	</script>
+</dom-module>

@@ -1,0 +1,24 @@
+{
+  "URI": "http://object.com/lamp",
+  "name": "Table lamp",
+  "origin": [
+    3.8,
+    3.8,
+    0.5
+  ],
+  "model": "http://object.com/lamp/model.dae",
+  "rotation": [
+    0,
+    0,
+    0
+  ],
+  "scale": [
+    1,
+    1,
+    1
+  ],
+  "ARfeature": [
+    "http://object.com/lamp/feature.xml",
+    "http://object.com/lamp/feature.dat"
+  ]
+}

@@ -1,0 +1,63 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-cylinder">
+	<template>
+		<style>
+			xr-cylinder {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRCylinder extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-cylinder";
+			}
+
+			static get properties() {
+				return {
+					radiusTop: {type: Number, value: 20},
+					radiusBottom: {type: Number, value: 20},
+					height: {type: Number, value: 100},
+					radiusSegments: {type: Number, value: 32}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let geometry = new THREE.CylinderGeometry(this.radiusTop, this.radiusBottom, this.height, this.radiusSegments);
+				let material = new THREE.MeshLambertMaterial({
+					color: this.color
+				});
+
+				if (this.texture !== undefined) {
+					material.map = new THREE.TextureLoader().load(this.texture);
+				}
+
+				let mesh = new THREE.Mesh(geometry, material);
+
+				this.addWebGLObject3D(mesh);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+
+				this.boundingBox = this.computeBoundingBox();
+			}
+		}
+
+		customElements.define(XRCylinder.is, XRCylinder);
+
+	</script>
+</dom-module>

@@ -1,0 +1,70 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-plane">
+	<template>
+		<style>
+			xr-plane {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRPlane extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-plane";
+			}
+
+			static get properties() {
+				return {
+					width: {type: Number, value: 1},
+					height: {type: Number, value: 1},
+					widthSegments: {type: Number, value: 1},
+					heightSegments: {type: Number, value: 1},
+				};
+			}
+
+			static get observers() {
+				return;
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let geometry = new THREE.PlaneGeometry(this.width, this.height, this.widthSegments, this.heightSegments);
+				let material = new THREE.MeshBasicMaterial({
+					color: this.color,
+					side: THREE.DoubleSide,
+					transparent: true,
+					depthTest: true
+				});
+
+				if (this.texture !== undefined) {
+					material.map = new THREE.TextureLoader().load(this.texture);
+				}
+
+				let mesh = new THREE.Mesh(geometry, material);
+
+				this.addWebGLObject3D(mesh);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+
+				this.boundingBox = this.computeBoundingBox();
+			}
+		}
+
+		customElements.define(XRPlane.is, XRPlane);
+
+	</script>
+</dom-module>

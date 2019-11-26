@@ -1,0 +1,104 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-obj">
+	<template>
+		<style>
+			xr-obj {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRObj extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-obj";
+			}
+
+			static get properties() {
+				return {
+					obj: {type: String},
+					mtl: {type: String},
+					baseUrl: {type: String}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						let percentComplete = xhr.loaded / xhr.total * 100;
+						XR.log( XRObj.is, Math.round(percentComplete, 2) + '% downloaded' );
+					}
+				};
+
+				let onError = function ( xhr ) { };
+
+				THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
+
+				let mtlLoader = new THREE.MTLLoader();
+				mtlLoader.setPath( this.baseUrl + "/" );
+				mtlLoader.load(this.mtl, material => {
+					material.preload();
+
+					let objLoader = new THREE.OBJLoader();
+					objLoader.setMaterials( material );
+					objLoader.setPath( this.baseUrl + "/" );
+					objLoader.load(this.obj, object => {
+						let webGLChildren, css3DChildren;
+
+						if(this.webGLObject3D.children.length>0) {
+							webGLChildren = this.webGLObject3D.children;
+						}
+
+						if(this.CSS3DObject3D.children.length>0) {
+							css3DChildren = this.CSS3DObject3D.children;
+						}
+
+						this.addWebGLObject3D(object);
+						this.addCSS3DObject3D(this.CSS3DObject3D);
+
+						if(webGLChildren !== undefined) {
+							this.webGLObject3D.children.concat(this.webGLObject3D.children, webGLChildren);
+						}
+
+						if(css3DChildren !== undefined) {
+							this.CSS3DObject3D.children.concat(this.CSS3DObject3D.children, css3DChildren);
+						}
+
+						this.onModelLoaded();
+
+						this.boundingBox = this.computeBoundingBox();
+					});
+				});
+			}
+
+			onModelLoaded() {
+				if (this.childNodes.length > 0) {
+					for (let child of this.childNodes) {
+						if (child.onModelLoaded !== undefined) {
+							child.onModelLoaded();
+						}
+					}
+				}
+			}
+		}
+
+		customElements.define(XRObj.is, XRObj);
+
+		XRObj.MODEL_UNLOADED = "unloaded";
+	</script>
+</dom-module>

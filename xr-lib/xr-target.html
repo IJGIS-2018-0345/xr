@@ -1,0 +1,260 @@
+<link rel="import" href="./polymerImport.html">
+<dom-module id="xr-target">
+	<script>
+		'use strict';
+
+		class XRTarget extends XRElement {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-target";
+			}
+
+			static get properties() {
+				return {
+					id: {type: String},
+					targetObjects: {type: Array, value: []},
+					status: {type: String, value: XREvent.AR_TARGET_MISSED},
+					src: {type: String},
+					disabled: {type:Boolean, value: false}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				let webGLAugmentation = new THREE.Group();
+				let css3DAugmentation = new THREE.Group();
+
+				this.addWebGLObject3D(webGLAugmentation);
+				this.addCSS3DObject3D(css3DAugmentation);
+
+				this.trackerType = "";
+				this.width = 0;
+				this.height = 0;
+				this.depth = 0;
+
+				if(this.disabled) {
+					this.style.display = "none";
+				}
+
+				let observer = new MutationObserver(function (mutations) {
+					mutations.forEach(mutationRecord => {
+						if(this.disabled) {
+							this.style.display = "none";
+						} else {
+							this.style.display = "block";
+						}
+					});
+				}.bind(this));
+
+				observer.observe(this, {attributes: true, attributeFilter: ['disabled']});
+
+				if($(XRAR.is).length > 0) {
+					let arEngine = ($(XRAR.is)[0].engine !== undefined)? $(XRAR.is)[0].engine : XRTarget.VUFORIA;
+
+					window.addEventListener('WebComponentsReady', function() {
+						if (arEngine === XRTarget.VUFORIA && !this.parentElement.disabled && XR.ContextManager.isMobile()) {
+							XR.log(XRTarget.is, "request target JSON Data");
+
+							$.ajax({
+								url: this.src + XRTarget.VUFORIA_JSON_PATH,
+								success: (data) => {
+									XR.log(data);
+									this.feature = data;
+									XR.SpaceManager.addTargets(this.feature);
+								},
+								error: (err) => {
+									XR.log(XRTarget.is, this.src + XRTarget.VUFORIA_JSON_PATH + " not found")
+								}
+							});
+						}
+					}.bind(this));
+				}
+
+				this.addEventListener(XREvent.AR_TARGET_DETECTED, this.onDetected);
+				this.addEventListener(XREvent.AR_TARGET_MOVED, this.onMoved);
+				this.addEventListener(XREvent.AR_TARGET_MISSED, this.onMissed);
+				this.addEventListener(XREvent.TARGET_ABAILABLE, this.targetAvailable);
+			}
+
+			disconnectedCallback() {
+				if (this.feature !== undefined) {
+					XR.SpaceManager.unloadTargets(this.feature);
+				}
+			}
+
+			onDetected(event) {
+				XR.log(XRTarget.is, "detect");
+
+				this.status = XREvent.AR_TARGET_DETECTED;
+				this.trackerType = event.detail.tracker;
+				this.width = event.detail.size.width;
+				this.height = event.detail.size.height;
+				this.depth = event.detail.size.depth;
+
+				let texture = undefined; // XRTarget.TARGET_TRANSPARENT_TEXTURE;
+				let geometry;
+
+				switch (this.trackerType) {
+					case XRTarget.IMAGE_TARGET:
+						geometry = new THREE.PlaneGeometry(this.width, this.height);
+						break;
+
+					case XRTarget.MULTI_TARGET:
+						geometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
+						break;
+
+					case XRTarget.CYLINDER_TARGET:
+						geometry = new THREE.CylinderGeometry(this.width / 2, this.depth / 2, this.height, 48);
+						break;
+
+					case XRTarget.OBJECT_TARGET:
+						geometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
+						break;
+
+					case XRTarget.UNKNOWN_TARGET:
+						break;
+				}
+
+				let material = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(texture)});
+				let transparentTarget = new THREE.Mesh(geometry, material);
+				this.webGLObject3D.add(transparentTarget);
+
+				XREvent.dispatchEvent({type: XREvent.TARGET_ABAILABLE, target: this});
+			}
+
+			onMoved(event) {
+				if(!this.disabled) {
+					if (this.trackerType == XRTarget.CYLINDER_TARGET) {
+						let position = new THREE.Vector3();
+						let quaternion = new THREE.Quaternion();
+						let scale = new THREE.Vector3();
+
+						let matrix = this.convertModelViewMatrix(event.detail.transform);
+						matrix.decompose(position, quaternion, scale);
+
+						let x = new THREE.Vector3();
+						let y = new THREE.Vector3();
+						let z = new THREE.Vector3();
+
+						matrix.extractBasis(x, y, z);
+
+						let newMatrix4 = new THREE.Matrix4();
+						newMatrix4.makeBasis(x, z, y.negate());
+						newMatrix4.setPosition(position);
+
+						position = new THREE.Vector3();
+						quaternion = new THREE.Quaternion();
+						scale = new THREE.Vector3();
+
+						newMatrix4.decompose(position, quaternion, scale);
+
+						this.webGLObject3D.position.set(position.x, position.y, position.z);
+						this.webGLObject3D.setRotationFromQuaternion(quaternion);
+						this.webGLObject3D.scale.set(scale.x, scale.y, scale.z);
+						this.webGLObject3D.translateY(this.height / 2);
+
+						this.CSS3DObject3D.position.set(position.x * 1000, position.y * 1000, position.z * 1000);
+						this.CSS3DObject3D.setRotationFromQuaternion(quaternion);
+						this.CSS3DObject3D.scale.set(scale.x, scale.y, scale.z);
+						this.CSS3DObject3D.translateY(this.height / 2);
+					} else {
+						let position = new THREE.Vector3();
+						let quaternion = new THREE.Quaternion();
+						let scale = new THREE.Vector3();
+
+						let matrix = this.convertModelViewMatrix(event.detail.transform);
+						matrix.decompose(position, quaternion, scale);
+
+						this.webGLObject3D.position.set(position.x, position.y, position.z);
+						this.webGLObject3D.setRotationFromQuaternion(quaternion);
+						this.webGLObject3D.scale.set(scale.x, scale.y, scale.z);
+
+						this.CSS3DObject3D.position.set(position.x * 1000, position.y * 1000, position.z * 1000);
+						this.CSS3DObject3D.setRotationFromQuaternion(quaternion);
+						this.CSS3DObject3D.scale.set(scale.x, scale.y, scale.z);
+					}
+				}
+			}
+
+			onMissed(event) {
+				if(this.status !== XREvent.AR_TARGET_MISSED) {
+					XR.log(XRTarget.is, "missed");
+					this.status = XREvent.AR_TARGET_MISSED;
+					this.clearObject3D();
+					TWEEN.removeAll();
+					$(XRWorld.is)[0].transformControls.detach();
+				}
+			}
+
+			targetAvailable(event) {
+				this.webGLObject3D.position.set(0, 0, 0);
+				this.webGLObject3D.rotation.set(0, 0, 0);
+				this.CSS3DObject3D.position.set(0, 0, 0);
+				this.CSS3DObject3D.rotation.set(0, 0, 0);
+			}
+
+			clearObject3D() {
+				let cssObjects = [];
+
+				for (let i = this.webGLObject3D.children.length - 1; i >= 0; i--) {
+					let child = this.webGLObject3D.children[i];
+
+					this.webGLObject3D.remove(child);
+				}
+
+				this.CSS3DObject3D.traverse(cssObject => {
+					if (cssObject !== this.CSS3DObject3D) {
+						cssObjects.push(cssObject);
+					}
+				});
+
+				cssObjects.forEach(cssObject => {
+					cssObject.parent.remove(cssObject);
+				})
+			}
+
+			convertModelViewMatrix(modelViewMatrix) {
+				let newModelViewMatrix = new THREE.Matrix4();
+
+				newModelViewMatrix.elements[0] = -modelViewMatrix.elements[1];
+				newModelViewMatrix.elements[1] = -modelViewMatrix.elements[0];
+				newModelViewMatrix.elements[2] = -modelViewMatrix.elements[2];
+				newModelViewMatrix.elements[3] = -modelViewMatrix.elements[3];
+
+				newModelViewMatrix.elements[4] = -modelViewMatrix.elements[5];
+				newModelViewMatrix.elements[5] = -modelViewMatrix.elements[4];
+				newModelViewMatrix.elements[6] = -modelViewMatrix.elements[6];
+				newModelViewMatrix.elements[7] = -modelViewMatrix.elements[7];
+
+				newModelViewMatrix.elements[8] = -modelViewMatrix.elements[9];
+				newModelViewMatrix.elements[9] = -modelViewMatrix.elements[8];
+				newModelViewMatrix.elements[10] = -modelViewMatrix.elements[10];
+				newModelViewMatrix.elements[11] = -modelViewMatrix.elements[11];
+
+				newModelViewMatrix.elements[12] = -modelViewMatrix.elements[13];
+				newModelViewMatrix.elements[13] = -modelViewMatrix.elements[12];
+				newModelViewMatrix.elements[14] = -modelViewMatrix.elements[14];
+				newModelViewMatrix.elements[15] = modelViewMatrix.elements[15];
+
+				return newModelViewMatrix;
+			}
+		}
+
+		customElements.define(XRTarget.is, XRTarget);
+
+		XRTarget.VUFORIA = "vuforia";
+		XRTarget.VUFORIA_JSON_PATH = "/index.json";
+		XRTarget.VUFORIA_METATDATA_URL = "metadataURL";
+		XRTarget.VUFORIA_FEATURE_URL = "featureURL";
+		XRTarget.IMAGE_TARGET = "imageTarget";
+		XRTarget.MULTI_TARGET = "multiTarget";
+		XRTarget.CYLINDER_TARGET = "cylinderTarget";
+		XRTarget.OBJECT_TARGET = "objectTarget";
+		XRTarget.UNKNOWN_TARGET = "unknownTarget";
+		XRTarget.TARGET_TRANSPARENT_TEXTURE = "https://xrweb.webizing.org/images/target_texture.png";
+	</script>
+</dom-module>

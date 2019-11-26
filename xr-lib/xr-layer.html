@@ -1,0 +1,387 @@
+<dom-module id="xr-layer">
+	<template>
+		<style>
+			* {
+				tap-highlight-color: rgba(0, 0, 0, 0);
+				-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+				-moz-tap-highlight-color: rgba(0, 0, 0, 0);
+			}
+			#XRLeftLayer {
+				position: absolute;
+				top: 120px;
+				left: 5px;
+				width: 60px;
+				height: 240px;
+				padding: 0px;
+				overflow: hidden;
+				border: 1px solid #FF007F;
+				border-radius: 15px;
+				display: none;
+			}
+
+			#moreLayer {
+				position: absolute;
+				top: 365px;
+				left: 5px;
+				width: 60px;
+				height: 60px;
+				padding: 0px;
+				color: #FFFFFF;
+				background-color: #FF007F;
+				border-radius: 15px;
+				display: none;
+			}
+
+			#moreLayer > iron-icon {
+				width: 100%;
+				height: 50%;
+				margin-top: 15px;
+			}
+
+			#moreLayerList > paper-item {
+				font-weight: normal !important;
+			}
+
+			#XRLeftLayer > paper-item > img {
+				width: 96%;
+				margin: 1px 2%;
+				height: 58px;
+				border-radius: 50%;
+			}
+
+			#XRCenterLayer, #MoreLayerList {
+				max-height: 200px;
+				overflow: scroll;
+			}
+
+			.XRLayerItem {
+				padding: 0px;
+				cursor: pointer;
+			}
+
+			.XRLayerItem:focus::before,
+			.XRLayerItem:focus::after {
+				color: white;
+				opacity: 0;
+			}
+
+			.XRLayerItem > img {
+				height: 40px;
+				margin-right: 10px;
+				border-radius: 50%;
+			}
+
+			.XRLayerItem > p {
+				display: block;
+			}
+
+			#LayerOKBtn {
+				width: 30px;
+				height: 30px;
+				float: right;
+				color: #FF007F;
+			}
+
+			#LayerShowBtn {
+				width: 30px;
+				height: 30px;
+				float: left;
+				color: #8C8C8C;
+			}
+
+			iron-icon.LayerBtn {
+				--iron-icon-height: 30px;
+				--iron-icon-width: 30px;
+			}
+
+			#selectedItem {
+				display: none;
+				padding: 0px;
+			}
+
+			#itemUp, #itemDown, #itemDelete {
+				margin-top: 5px;
+				color: #FFFFFF;
+				background-color: #FF007F;
+				border-radius: 10px;
+				z-index: 2;
+			}
+
+			#layerBox {
+				position:absolute;
+				left: 5px;
+				top: 53px;
+			}
+
+			#layerDiv {
+				width: 0px;
+				height: 50px;
+				padding: 5px 40px;
+				padding-left: 20px;
+				color: #FFF;
+				background-color: #8C8C8C;
+				border-radius: 15px;
+			}
+
+			#layerDiv > iron-icon {
+				top: 10px;
+				right: 6px;
+			}
+		</style>
+
+		<paper-listbox id="XRLeftLayer">
+		</paper-listbox>
+		<paper-item id="moreLayer" on-click="moreLayerDialog">
+			<iron-icon icon="more-horiz"></iron-icon>
+		</paper-item>
+
+		<paper-dialog id="XRLayerModal">
+			<paper-listbox id="XRCenterLayer" multi>
+			</paper-listbox>
+			<iron-icon icon="settings-overscan" id="LayerShowBtn" on-tap="layerShow"></iron-icon>
+			<iron-icon icon="add-circle" id="LayerOKBtn" on-tap="closeDialog"></iron-icon>
+		</paper-dialog>
+
+		<paper-dialog id="XRMoreLayerDialog">
+			<div id="MoreLayerList">
+			</div>
+		</paper-dialog>
+		<paper-item id="selectedItem">
+			<paper-icon-button icon="close" id="itemDelete"></paper-icon-button>
+			<paper-icon-button icon="expand-less" id="itemUp"></paper-icon-button>
+			<paper-icon-button icon="expand-more" id="itemDown"></paper-icon-button>
+		</paper-item>
+
+		<div id="layerBox">
+			<div id="layerDiv" on-click="openDialog">
+				<iron-icon icon="content-copy" class="LayerBtn"></iron-icon>
+			</div>
+		</div>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRLayerUI extends XRUI {
+
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-layer";
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+				this.setLayerObj();
+			}
+
+			setLayerObj() {
+				XRLayerUI.layerObj = [];
+				XRLayerUI.layerList = {};
+
+				this.layerItemAdd('//xrweb.webizing.org/images/foursquare.png', 'Foursquare');
+				this.layerItemAdd('//xrweb.webizing.org/images/instagram.png', 'Instagram');
+				this.layerItemAdd('//xrweb.webizing.org/images/tripadvisor.png', 'Tripadvisor');
+				this.layerItemAdd('//xrweb.webizing.org/images/wikipedia.png', 'Wikipedia');
+				this.layerItemAdd('//xrweb.webizing.org/images/yelp.png', 'Yelp');
+			}
+
+
+			layerItemAdd(img, txt) {
+				let item = document.createElement('paper-item');
+				let itemID = 'XRLayerItem' + XRLayerUI.layerObj.length;
+
+				item.classList.add('XRLayerItem');
+				item.setAttribute('id', itemID);
+
+				let imgBox = document.createElement('img');
+				imgBox.setAttribute('src', img);
+
+				let txtBox = document.createElement('p');
+				txtBox.innerHTML = txt;
+
+				item.appendChild(imgBox);
+				item.appendChild(txtBox);
+				this.$.XRCenterLayer.appendChild(item);
+
+				XRLayerUI.layerObj.push({ img: img, txt: txt});
+
+				let obj = {};
+				obj.img = imgBox;
+				obj.txt = txtBox;
+				XRLayerUI.layerList[itemID] = obj;
+			}
+
+			getLayerList() {
+				return XRLayerUI.layerList;
+			}
+
+			openDialog() {
+				let layerItem = [...this.shadowRoot.querySelectorAll('.XRLayerItem')];
+				layerItem.map((layer) => {
+					layer.classList.remove('iron-selected');
+				})
+				this.$.XRLayerModal.open();
+			}
+
+			closeDialog() {
+				this.$.XRLayerModal.close();
+
+				let layerItem = [...this.shadowRoot.querySelectorAll('.XRLayerItem')];
+				layerItem.map((layer) => {
+					if (layer.classList.contains('iron-selected')) {
+						layer.removeChild(layer.lastElementChild);
+						let layerBox = this.$.XRLeftLayer;
+						layerBox.insertBefore(layer, layerBox.firstChild);
+					}
+				})
+			}
+
+			layerShow() {
+				if (this.$.XRLeftLayer.style.display === 'block') {
+					this.$.XRLeftLayer.style.display = 'none';
+					this.$.moreLayer.style.display = 'none';
+					this.$.LayerShowBtn.style.color = '#8C8C8C';
+					this.$.layerDiv.style.backgroundColor = '#8C8C8C';
+				} else {
+					this.$.XRLeftLayer.style.display = 'block';
+					this.$.moreLayer.style.display = 'block';
+					this.$.LayerShowBtn.style.color = '#FF007F';
+					this.$.layerDiv.style.backgroundColor = '#FF007F';
+				}
+			}
+
+			moreLayerDialog() {
+				let layer = this.$.XRLeftLayer.cloneNode(true);
+				let layerItem = [...layer.children];
+				let layerList = this.getLayerList();
+				let dialogBox = this.$.MoreLayerList;
+				let itemID;
+
+				dialogBox.innerHTML = '';
+
+				layerItem.map((item) => {
+					itemID = item.getAttribute('id');
+					if (layerList[itemID]) {
+						item.appendChild(layerList[itemID].txt);
+						dialogBox.appendChild(item);
+						this.itemClickEvent(item);
+					}
+				})
+				this.$.XRMoreLayerDialog.open();
+				this.chkMoreLayerLength();
+			}
+
+			itemClickEvent(item) {
+				item.addEventListener('tap', (e) => {
+					e.stopPropagation();
+					this.itemSelected(item);
+				})
+			}
+
+			itemSelected(item) {
+				let selectedItem = this.$.selectedItem.cloneNode(true);
+
+				if (item.lastElementChild.tagName === 'P') {
+					this.itemTitleSet();
+					item.removeChild(item.lastElementChild);
+					item.appendChild(selectedItem);
+					selectedItem.style.display = 'block';
+					this.btnSelectEvent(selectedItem, item);
+				} else {
+					this.btnSelectEvent(item.lastElementChild, item);
+				}
+			}
+
+			btnSelectEvent(selectedItem, item) {
+				selectedItem.firstElementChild.addEventListener('tap', (e) => {
+					e.stopPropagation();
+					this.itemDeleteFn(item);
+				});
+				selectedItem.childNodes[3].addEventListener('tap', (e) => {
+					e.stopPropagation();
+					this.itemPriorityUp(item);
+				});
+				selectedItem.lastElementChild.addEventListener('tap', (e) => {
+					e.stopPropagation();
+					this.itemPriorityDown(item);
+				});
+			}
+
+			itemTitleSet() {
+				let layer = this.$.MoreLayerList;
+				let layerItem = [...layer.children];
+				let layerList = this.getLayerList();
+				let itemID;
+				let itemTag;
+
+				layerItem.map((item) => {
+					itemTag = item.lastElementChild.tagName;
+					if (itemTag !== 'P') {
+						itemID = item.getAttribute('id');
+						if (layerList[itemID]) {
+							item.removeChild(item.lastElementChild);
+							item.appendChild(layerList[itemID].txt.cloneNode(true));
+						}
+					}
+				})
+			}
+
+			chkMoreLayerLength() {
+				let moreLayerList = this.$.MoreLayerList;
+				if (moreLayerList.childNodes.length === 0) {
+					moreLayerList.innerHTML = 'The selected Layer is not exist.';
+				}
+			}
+
+			itemDeleteFn(item) {
+				this.itemTitleSet();
+				item.parentNode.removeChild(item);
+
+				let lLayer = this.$.XRLeftLayer;
+				let cLayer = this.$.XRCenterLayer;
+				let layerItem = [...lLayer.children];
+				layerItem.map((layer) => {
+					if (layer.getAttribute('id') === item.getAttribute('id')) {
+						cLayer.appendChild(item.cloneNode(true));
+						layer.parentNode.removeChild(layer);
+					}
+				});
+
+				this.chkMoreLayerLength();
+			}
+
+			itemPriorityUp(item) {
+				if (item.previousSibling !== null) {
+					let currentNode = item.cloneNode(true);
+					let prevNode = item.previousSibling.cloneNode(true);
+
+					item.parentNode.replaceChild(currentNode, item.previousSibling);
+					item.parentNode.replaceChild(prevNode, item);
+
+					this.btnSelectEvent(currentNode.lastElementChild, currentNode);
+					this.itemClickEvent(currentNode);
+					this.itemClickEvent(prevNode);
+				}
+			}
+
+			itemPriorityDown(item) {
+				if (item.nextSibling !== null) {
+					let currentNode = item.cloneNode(true);
+					let nextNode = item.nextSibling.cloneNode(true);
+
+					item.parentNode.replaceChild(currentNode, item.nextSibling);
+					item.parentNode.replaceChild(nextNode, item);
+
+					this.btnSelectEvent(currentNode.lastElementChild, currentNode);
+					this.itemClickEvent(currentNode);
+					this.itemClickEvent(nextNode);
+				}
+			}
+		}
+
+		customElements.define(XRLayerUI.is, XRLayerUI);
+	</script>
+</dom-module>

@@ -1,0 +1,32 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-description">
+	<script>
+		'use strict';
+
+		class XRDescription extends Polymer.Element {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-description";
+			}
+
+			static get properties() {
+				return {
+					title: { type: String },
+					img: { type: String },
+					desc: { type: String }
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+			}
+		}
+
+		customElements.define(XRDescription.is, XRDescription);
+
+	</script>
+</dom-module>

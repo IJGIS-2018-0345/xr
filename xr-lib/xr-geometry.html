@@ -1,0 +1,37 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-geometry">
+	<script>
+		'use strict';
+
+		class XRGeometry extends XRElement {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-geometry";
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+				this.boundingBox = undefined;
+			}
+
+			computeBoundingBox() {
+
+				const clone = this.webGLObject3D.clone();
+				const inversedMatrix = (new THREE.Matrix4).getInverse(clone.matrixWorld);
+				clone.applyMatrix(inversedMatrix);
+
+				let box = new THREE.BoxHelper(clone);
+				this.webGLObject3D.add(box);
+
+				return box;
+			}
+		}
+
+		customElements.define(XRGeometry.is, XRGeometry);
+
+	</script>
+</dom-module>

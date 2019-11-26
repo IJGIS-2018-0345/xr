@@ -1,0 +1,37 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-light">
+	<script>
+		'use strict';
+
+		class XRLight extends XRElement {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-light";
+			}
+
+			static get properties() {
+				return {
+					color: {
+						type: Number,
+						value: 0xffffff
+					},
+					intensity: {
+						type: Number,
+						value: 1
+					}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+			}
+		}
+
+		customElements.define(XRLight.is, XRLight);
+
+	</script>
+</dom-module>

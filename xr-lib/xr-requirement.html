@@ -1,0 +1,30 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-requirement">
+	<script>
+		'use strict';
+
+		class XRRequirement extends Polymer.Element {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-requirement";
+			}
+
+			static get properties() {
+				return {
+					devices: {type: Array, value: [] }
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+			}
+		}
+
+		customElements.define(XRRequirement.is, XRRequirement);
+
+	</script>
+</dom-module>

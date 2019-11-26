@@ -1,0 +1,33 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-light-ambient">
+	<script>
+		'use strict';
+
+		class XRLightAmbient extends XRLight {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-light-ambient";
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				this.addWebGLObject3D(new THREE.AmbientLight(this.color, this.intensity));
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+			}
+		}
+
+		customElements.define(XRLightAmbient.is, XRLightAmbient);
+
+	</script>
+</dom-module>

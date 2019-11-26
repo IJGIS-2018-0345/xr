@@ -1,0 +1,54 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-light-directional">
+	<script>
+		'use strict';
+
+		class XRLightDirectional extends XRLight {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-light-directional";
+			}
+
+			static get properties() {
+				return {
+					lookAt: {
+						type: String,
+						value: "0 0 0"
+					}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let group = new THREE.Group();
+				let targetObject = new THREE.Object3D();
+				let targetPosition = this.lookAt.split(" ");
+				targetObject.position.set(targetPosition[0], targetPosition[1], targetPosition[2]);
+
+				group.add(targetObject);
+
+				let light = new THREE.DirectionalLight(this.color, this.intensity);
+				light.target = targetObject;
+
+				group.add(light);
+
+				this.addWebGLObject3D(group);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+			}
+		}
+
+		customElements.define(XRLightDirectional.is, XRLightDirectional);
+
+	</script>
+</dom-module>

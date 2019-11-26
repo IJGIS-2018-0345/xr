@@ -1,0 +1,65 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-box">
+	<template>
+		<style>
+			xr-box {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRBox extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-box";
+			}
+
+			static get properties() {
+				return {
+					width: Number,
+					height: Number,
+					depth: Number,
+					widthSegments: {type: Number, value: 1},
+					heightSegments: {type: Number, value: 1},
+					depthSegments: {type: Number, value: 1}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let geometry = new THREE.BoxGeometry(this.width, this.height, this.depth, this.widthSegments, this.heightSegments, this.depthSegments);
+				let material = new THREE.MeshLambertMaterial({
+					color: this.color,
+					wireframe: false
+				});
+
+				if (this.texture !== undefined) {
+					material.map = new THREE.TextureLoader().load(this.texture);
+				}
+
+				let mesh = new THREE.Mesh(geometry, material);
+				this.addWebGLObject3D(mesh);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+
+				this.boundingBox = this.computeBoundingBox();
+			}
+		}
+
+		customElements.define(XRBox.is, XRBox);
+
+	</script>
+</dom-module>

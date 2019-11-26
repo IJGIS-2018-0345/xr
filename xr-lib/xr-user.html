@@ -1,0 +1,55 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-user">
+	<script>
+		'use strict';
+
+		class XRUser extends Polymer.Element {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-user";
+			}
+
+			static get properties() {
+				return {
+					userId: {type: String, value: ""},
+					authority: {type: String, value: "viewer" },
+					me: {type: Boolean, value: false }
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				$.ajax({
+					url:  "//" + window.location.host + "/users/me",
+					success : data => {
+						if(this.isMe(data.message.email)) {
+							this.setAttribute("me", '');
+						}
+					},
+					error: err => {
+						/* test code */
+						if(this.isMe("jongho.lee@wrl.onl")) {
+							this.setAttribute("me", '');
+						}
+					}
+				})
+			}
+
+			isMe(email) {
+				return email === this.userId;
+			}
+		}
+
+		customElements.define(XRUser.is, XRUser);
+
+		XRUser.AUTHORITY_VIEWER = "viewer";
+		XRUser.AUTHORITY_EDITOR = "editor";
+		XRUser.AUTHORITY_OWNER = "owner";
+
+	</script>
+</dom-module>

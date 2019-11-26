@@ -1,0 +1,48 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-light-point">
+	<script>
+		'use strict';
+
+		class XRLightPoint extends XRLight {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-light-point";
+			}
+
+			static get properties() {
+				return {
+					distance: {
+					    type: Number,
+						value: 0
+					},
+					decay: {
+					    type: Number,
+						value: 1
+					}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				let light = new THREE.PointLight(this.color, this.intensity, this.distance, this.decay);
+
+				this.addWebGLObject3D(light);
+				this.addCSS3DObject3D(this.CSS3DObject3D);
+			}
+		}
+
+		customElements.define(XRLightPoint.is, XRLightPoint);
+
+	</script>
+</dom-module>

@@ -1,0 +1,114 @@
+<dom-module id="xr-debug">
+	<template>
+		<style>
+			#textBox {
+				position:absolute;
+				bottom: 70px;
+				width: 98vw;
+				height: 100px;
+				margin-left: 1vw;
+				display: none;
+			}
+
+			#debugText {
+				width: 84%;
+				height: 100%;
+				padding: 0px;
+				border: 2px solid #2196F3;
+				border-radius: 10px;
+				float: left;
+			}
+
+			#debugText:focus {
+				outline: none;
+			}
+
+			#executeBtn {
+				width: 13%;
+				height: 100%;
+				margin-left: 2%;
+				color: #FFFFFF;
+				background-color: #2196F3;
+				border-radius: 10px;
+			}
+
+			#debugBox {
+				position: absolute;
+				left: 70px;
+				bottom: 5px;
+			}
+
+			#debugDiv {
+				width: 0px;
+				height: 50px;
+				padding: 5px 40px;
+				padding-left: 20px;
+				color: #FFF;
+				background-color: #8C8C8C;
+				border-radius: 15px;
+			}
+
+			#debugDiv > iron-icon {
+				top: 13px;
+				right: 2px;
+			}
+		</style>
+
+		<div id="textBox">
+			<textarea id="debugText" on-focusin="textFocusIn" on-focusout="textFocusOut"></textarea>
+			<paper-icon-button icon="subdirectory-arrow-right" id="executeBtn" on-click="executeText"></paper-icon-button>
+		</div>
+
+		<div id="debugBox">
+			<div id="debugDiv" on-click="openDebug">
+				<iron-icon icon="tab"></iron-icon>
+			</div>
+		</div>
+	</template>
+	<script>
+		'use strict';
+
+		class XRDebugUI extends XRUI {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-debug";
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+			}
+
+			openDebug() {
+				if(this.$.textBox.style.display !== 'block') {
+					this.$.textBox.style.display = 'block';
+					this.$.debugDiv.style.background = '#2196F3';
+				}else {
+					this.$.textBox.style.display = 'none';
+					this.$.debugDiv.style.background = '#8C8C8C';
+				}
+			}
+
+			executeText() {
+				let txt = this.$.debugText.value;
+				eval(txt);
+			}
+
+			textFocusIn() {
+				if(XR.ContextManager.getXRDeviceType() === 'mobile'){
+					this.$.textBox.style.bottom = '45vh';
+				}
+			}
+
+			textFocusOut() {
+				if(XR.ContextManager.getXRDeviceType() === 'mobile'){
+					this.$.textBox.style.bottom = '70px';
+				}
+			}
+		}
+
+		customElements.define(XRDebugUI.is, XRDebugUI);
+	</script>
+</dom-module>

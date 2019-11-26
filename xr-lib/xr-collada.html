@@ -1,0 +1,89 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-collada">
+	<template>
+		<style>
+			xr-collada {
+				--xr-transform: var(--xr-transform);
+			}
+		</style>
+	</template>
+
+	<script>
+		'use strict';
+
+		class XRCollada extends XRGeometry {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-collada";
+			}
+
+			static get properties() {
+				return {
+					src: {type: String}
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+
+				if(this.parentElement.tagName.startsWith(XR.PREFIX_XR)) {
+					this.addEventListener(XREvent.TARGET_ABAILABLE, this.onTargetAvailable);
+				}
+			}
+
+			onTargetAvailable (event) {
+				this.webGLObject3D = new THREE.Group();
+
+				let loader = new THREE.ColladaLoader();
+
+				loader.load(this.src, function (collada) {
+					let scene = collada.scene;
+					scene.updateMatrix();
+
+					let webGLChildren, css3DChildren;
+
+					if(this.webGLObject3D.children.length>0) {
+						webGLChildren = this.webGLObject3D.children;
+					}
+
+					if(this.CSS3DObject3D.children.length>0) {
+						css3DChildren = this.CSS3DObject3D.children;
+					}
+
+					this.addWebGLObject3D(scene);
+					this.addCSS3DObject3D(this.CSS3DObject3D);
+
+					if(webGLChildren !== undefined) {
+						this.webGLObject3D.children.concat(this.webGLObject3D.children, webGLChildren);
+					}
+
+					if(css3DChildren !== undefined) {
+						this.CSS3DObject3D.children.concat(this.CSS3DObject3D.children, css3DChildren);
+					}
+
+					this.onModelLoaded();
+
+					this.boundingBox = this.computeBoundingBox();
+				}.bind(this));
+			}
+
+			onModelLoaded() {
+				if (this.childNodes.length > 0) {
+					for (let child of this.childNodes) {
+						if (child.onModelLoaded !== undefined) {
+							child.onModelLoaded();
+						}
+					}
+				}
+			}
+		}
+
+		customElements.define(XRCollada.is, XRCollada);
+
+		XRCollada.MODEL_UNLOADED = "unloaded";
+	</script>
+</dom-module>

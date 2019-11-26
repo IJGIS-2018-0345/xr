@@ -1,0 +1,31 @@
+<link rel="import" href="./polymerImport.html">
+
+<dom-module id="xr-view">
+	<script>
+		'use strict';
+
+		class XRView extends Polymer.Element {
+			constructor() {
+				super();
+			}
+
+			static get is() {
+				return "xr-view";
+			}
+
+			static get properties() {
+				return {
+					default: {type: String, value: "3D"},
+					modes: {type: Array, value: ["3D", "VR", "AR"] }
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+			}
+		}
+
+		customElements.define(XRView.is, XRView);
+
+	</script>
+</dom-module>
